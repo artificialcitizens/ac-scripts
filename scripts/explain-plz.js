@@ -33,11 +33,6 @@ const chat = new ChatOpenAI({
   streaming: true,
   callbackManager: CallbackManager.fromHandlers({
     handleLLMStart: async (token) => {
-      let widget = await widget(`
-<div class="bg-black text-white h-screen p-5">
-    Loading...
-<div>
-`);
       log(`handleLLMStart`);
       currentMessage += token;
       let html = md(token);
@@ -56,7 +51,6 @@ const chat = new ChatOpenAI({
       await setSelectedText(JSON.stringify(err));
     },
     handleLLMEnd: async () => {
-      widget = null;
       log(`handleLLMEnd`);
 
       let html = md(currentMessage);
