@@ -12,7 +12,7 @@ to replace the text response. Your mileage may vary.
 // Description: Generate a prompt response in anywhere you can type
 // Author: Josh Mabry
 // Twitter: @AI_Citizen
-// Shortcut: cmd alt shift P
+// Shortcut: 
 
 import "@johnlindquist/kit";
 import Bottleneck from "bottleneck";
