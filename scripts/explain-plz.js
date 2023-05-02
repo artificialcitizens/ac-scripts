@@ -34,10 +34,6 @@ const chat = new ChatOpenAI({
   callbackManager: CallbackManager.fromHandlers({
     handleLLMStart: async (token) => {
       log(`handleLLMStart`);
-      currentMessage += token;
-      let html = md(token);
-
-      await div(html);
     },
     handleLLMNewToken: async (token, runId) => {
       log(`handleLLMNewToken`);
