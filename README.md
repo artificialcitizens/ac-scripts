@@ -14,11 +14,11 @@
 
 - Go to "Clone Kenv" and press enter
 
-![https://i.ibb.co/XLwFD2K/Screenshot-2023-05-02-at-9-11-56-AM.png](https://i.ibb.co/XLwFD2K/Screenshot-2023-05-02-at-9-11-56-AM.png)[url=https://ibb.co/3dJSvrj][img]https://i.ibb.co/XLwFD2K/Screenshot-2023-05-02-at-9-11-56-AM.png[/img][/url]
+![https://ibb.co/6PPkGCg](https://i.ibb.co/MVVmK0M/b.png)
 
 - Enter this repo and press enter
 
-![https://ibb.co/KwFVTqp](https://i.ibb.co/PQw1qhv/c.png)
+![https://i.ibb.co/XLwFD2K/Screenshot-2023-05-02-at-9-11-56-AM.png](https://i.ibb.co/XLwFD2K/Screenshot-2023-05-02-at-9-11-56-AM.png)
 
 You now have access to the various tools we have to play with, the info for how to use each tool
 lives in the repo.
