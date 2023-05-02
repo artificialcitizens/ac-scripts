@@ -23,6 +23,8 @@
 You now have access to the various tools we have to play with, the info for how to use each tool
 lives in the repo.
 
+You'll be prompted to install the dependencies for the scripts and enter any API keys needed.
+
 ## Updating Scripts
 
 To update your scripts navigate back to the Kit tab and Manage Kenv and use the Pull Kenv option
