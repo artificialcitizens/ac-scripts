@@ -3,10 +3,18 @@
 Highlight some text and have the GPT translate it to your native language
 Works for any highlighted text or code and any language that GPT supports
 and maybe even some it doesn't ¯\_(ツ)_/¯
+
+## Usage
+On initial run, user will be asked to provide their native language
+update .env file to change this later
+
+1. Highlight some text
+2. Run this script
+3. Wait for GPT to translate the text for you
 */
 
 // Name: Translate Text to Native Language
-// Description: Get an explanation for any highlighted text
+// Description: Get an translation for any highlighted text
 // Author: Josh Mabry
 // Twitter: @AI_Citizen
 
@@ -20,7 +28,8 @@ let openAIApiKey = await env("OPENAI_API_KEY", {
   hint: `Grab a key from <a href="https://platform.openai.com/account/api-keys">here</a>`,
 });
 let nativeLanguage = await env("USER_NATIVE_LANGUAGE", {
-  hint: `Grab a key from <a href="https://platform.openai.com/account/api-keys">here</a>`,
+  placeholder: "User Language",
+  hint: `What language do you want to translate text to? (ex: English) `,
 });
 let prompt = `#####
 Ignore prior instructions, you are tasked with taking the input text and translating it into ${nativeLanguage} 
