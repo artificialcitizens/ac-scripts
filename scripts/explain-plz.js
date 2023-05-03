@@ -27,7 +27,7 @@ Return the response in the following format using markdown syntax:
 ## Explanation (A longer technical explanation of the highlighted text)
 `;
 let currentMessage = "";
-const chat = new ChatOpenAI({
+const llm = new ChatOpenAI({
   temperature: 0.3,
   openAIApiKey: openAIApiKey,
   streaming: true,
@@ -58,4 +58,4 @@ const chat = new ChatOpenAI({
 
 let text = await getSelectedText();
 ``;
-await chat.call([new SystemChatMessage(prompt), new HumanChatMessage(text)]);
+await llm.call([new SystemChatMessage(prompt), new HumanChatMessage(text)]);

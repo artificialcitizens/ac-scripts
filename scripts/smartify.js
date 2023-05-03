@@ -49,7 +49,7 @@ const type = (text) => {
 };
 const wrappedType = limiter.wrap(type);
 
-const smartify = new ChatOpenAI({
+const llm = new ChatOpenAI({
   temperature: 0.3,
   openAIApiKey: openAIApiKey,
   streaming: true,
@@ -77,7 +77,4 @@ const smartify = new ChatOpenAI({
 });
 let text = await getSelectedText();
 
-await smartify.call([
-  new SystemChatMessage(prompt),
-  new HumanChatMessage(text),
-]);
+await llm.call([new SystemChatMessage(prompt), new HumanChatMessage(text)]);

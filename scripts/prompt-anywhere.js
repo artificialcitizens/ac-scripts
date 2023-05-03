@@ -12,7 +12,7 @@ to replace the text response. Your mileage may vary.
 // Description: Generate a prompt response in anywhere you can type
 // Author: Josh Mabry
 // Twitter: @AI_Citizen
-// Shortcut: 
+// Shortcut:
 
 import "@johnlindquist/kit";
 import Bottleneck from "bottleneck";
@@ -44,7 +44,7 @@ const type = (text) => {
 
 const wrappedType = limiter.wrap(type);
 
-const chat = new ChatOpenAI({
+const llm = new ChatOpenAI({
   temperature: 0.3,
   openAIApiKey: openAIApiKey,
   streaming: true,
@@ -73,4 +73,4 @@ const chat = new ChatOpenAI({
 
 let text = await getSelectedText();
 
-await chat.call([new SystemChatMessage(prompt), new HumanChatMessage(text)]);
+await llm.call([new SystemChatMessage(prompt), new HumanChatMessage(text)]);
