@@ -1,5 +1,5 @@
 /*
-# Translate Text to Native Language
+# Translate Text
 Highlight some text and have the GPT translate it to your native language
 Works for any highlighted text or code and any language that GPT supports
 and maybe even some it doesn't ¯\_(ツ)_/¯
@@ -13,7 +13,7 @@ update .env file to change this later
 3. Wait for GPT to translate the text for you
 */
 
-// Name: Translate Text to Native Language
+// Name: Translate Text
 // Description: Get an translation for any highlighted text
 // Author: Josh Mabry
 // Twitter: @AI_Citizen
@@ -71,5 +71,4 @@ const llm = new ChatOpenAI({
 });
 
 let text = await getSelectedText();
-``;
 await llm.call([new SystemChatMessage(prompt), new HumanChatMessage(text)]);
