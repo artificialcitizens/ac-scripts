@@ -85,7 +85,7 @@ async function processMessage() {
 * [Edit](submit:edit)
 * [Copy](submit:copy)
 `;
-
+        // TODO: feedback and prompt library
         let html = md(currentMessage + options);
         const selectedOption = await div(html, {
           ignoreBlur: true,
