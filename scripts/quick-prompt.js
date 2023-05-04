@@ -60,8 +60,7 @@ const llm = new ChatOpenAI({
       await wrappedType(token);
     },
     handleLLMError: async (err) => {
-      warn(`error`, JSON.stringify(err));
-      await setSelectedText(JSON.stringify(err));
+      notify(`error`, JSON.stringify(err));
       process.exit(1);
     },
     handleLLMEnd: async () => {
