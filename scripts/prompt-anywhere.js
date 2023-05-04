@@ -25,7 +25,7 @@ You can also just run and enter your own prompt.
 // Description: Custom prompt for any highlighted text
 // Author: Josh Mabry
 // Twitter: @AI_Citizen
-// Shortcut:
+// Shortcut: alt shift enter
 
 import "@johnlindquist/kit";
 
@@ -57,19 +57,34 @@ Task:${prompt}
 `;
 };
 let currentMessage = "";
-
+// Whether or not to render stop generation button
+// stops the generation and exits the script
+const stopButton = true;
+let abort = null;
+let loading = false;
 async function processMessage(
   prompt = formatPrompt(userSystemPromptInput),
   humanChatMessage = userInput
 ) {
   const llm = new ChatOpenAI({
     temperature: 0.3,
-    // modelName: "gpt-4", // uncomment to use GPT-4
+    // modelName: "gpt-4", // uncomment to use GPT-4 (requires beta access)
     openAIApiKey: openAIApiKey,
     streaming: true,
     callbackManager: CallbackManager.fromHandlers({
       handleLLMStart: async () => {
         log(`handleLLMStart`);
+        loading = true;
+        if (stopButton) {
+          abort = await widget(
+            `<button class="bg-red-800 rounded-full text-2xl p-6 cursor-pointer">STOP</button>`,
+            {
+              transparent: true,
+              hasShadow: false,
+              alwaysOnTop: true,
+            }
+          );
+        }
       },
       handleLLMNewToken: async (token) => {
         log(`handleLLMNewToken`);
@@ -80,18 +95,23 @@ async function processMessage(
       },
       handleLLMError: async (err) => {
         warn(`error`, JSON.stringify(err));
-        await setSelectedText(JSON.stringify(err));
       },
       handleLLMEnd: async () => {
+        // @TODO: Separate this into a function
         log(`handleLLMEnd`);
-
+        loading = false;
+        // want to close the stop button on LLM end, but this cancels the process
+        // if (abort) {
+        //   abort.close();
+        // }
+        // @TODO:updated to html list items and style as buttons
         const options = `
-* [Paste](submit:paste) 
-* [Retry](submit:retry)
-* [Edit](submit:edit)
-* [Copy](submit:copy)
+* [Retry](submit:retry) - Rerun generation with option to update prompt
+* [Edit](submit:edit) - Edit response in editor
+* [Copy](submit:copy) - Copy response to clipboard
+* [Paste](submit:paste) - Paste response into highlighted text
+* [Save](submit:save) - Save response to file (not working)
 `;
-        // TODO: feedback and prompt library
         let html = md(currentMessage + options);
         const selectedOption = await div(html, {
           ignoreBlur: true,
@@ -106,18 +126,22 @@ async function processMessage(
           case "retry":
             currentMessage = "";
             const followUp = await arg(userSystemPromptInput, {
-              hint: "Regenerate response from a new prompt or press enter to use the same",
+              hint: "Press enter to use the same prompt",
             });
             await processMessage((humanChatMessage = followUp));
             break;
           case "edit":
+            // still need to figure out best way to handle submit and abort
+            // would like custom buttons for triggering all these same options such as save
             await editor({
               value: currentMessage,
               onEscape: async (state) => {
+                // copy to clipboard
                 await clipboard.writeText(state);
                 process.exit(1);
               },
               onSubmit: async (state) => {
+                // paste into highlighted text
                 await setSelectedText(state);
                 process.exit(1);
               },
@@ -126,6 +150,10 @@ async function processMessage(
           case "copy":
             await clipboard.writeText(currentMessage);
             process.exit(1);
+          case "save":
+            // open in editor and save
+            // not sure why not working like in chatgpt.js
+            inspect(currentMessage);
           default:
             await clipboard.writeText(currentMessage);
             process.exit(1);
