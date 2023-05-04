@@ -67,7 +67,7 @@ async function processMessage(
     openAIApiKey: openAIApiKey,
     streaming: true,
     callbackManager: CallbackManager.fromHandlers({
-      handleLLMStart: async (token) => {
+      handleLLMStart: async () => {
         log(`handleLLMStart`);
       },
       handleLLMNewToken: async (token, runId) => {
@@ -127,6 +127,7 @@ async function processMessage(
             process.exit(1);
           default:
             await clipboard.writeText(currentMessage);
+            process.exit(1);
         }
       },
     }),
