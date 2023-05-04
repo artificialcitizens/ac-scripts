@@ -64,13 +64,14 @@ async function processMessage(
 ) {
   const llm = new ChatOpenAI({
     temperature: 0.3,
+    // modelName: "gpt-4", // uncomment to use GPT-4
     openAIApiKey: openAIApiKey,
     streaming: true,
     callbackManager: CallbackManager.fromHandlers({
       handleLLMStart: async () => {
         log(`handleLLMStart`);
       },
-      handleLLMNewToken: async (token, runId) => {
+      handleLLMNewToken: async (token) => {
         log(`handleLLMNewToken`);
         currentMessage += token;
         let html = md(currentMessage);
