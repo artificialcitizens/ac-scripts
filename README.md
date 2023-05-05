@@ -1,3 +1,5 @@
+!! Big Changes !! If you are here between upload and my tutorial video, just take a look at the prompt-anything script, its heavily documented. Check the deprecated folder for `quick-prompt.js` which is the old prompt-anything.js script. It's unstable at times and is not beginner friendly. I'll be making a video on how to use the new script soon.
+
 # Artificial Citizens x Script Kit
 
 <p>A collection of tools and experiments to bring AI to your fingertips with the power with ScriptKit.</p>

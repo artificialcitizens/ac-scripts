@@ -33,14 +33,14 @@ Useful for summarizing text, generating a title, or any other task you can think
 // Twitter: @AI_Citizen
 // Shortcut: alt shift enter
 
-//#################
-// ScriptKit Import
-//#################
+//##################
+// ScriptKit Imports
+//##################
 import "@johnlindquist/kit";
 
-//#################
+//##################
 // LangChain Imports
-//#################
+//##################
 let { ChatOpenAI } = await import("langchain/chat_models");
 let { HumanChatMessage, SystemChatMessage } = await import("langchain/schema");
 
@@ -71,6 +71,7 @@ ${prompt}
 //################
 // Options Template
 //################
+// @TODO: styling
 const options = `
 * [Retry](submit:retry) - Rerun generation with option to update prompt
 * [Edit](submit:edit) - Edit response in editor
