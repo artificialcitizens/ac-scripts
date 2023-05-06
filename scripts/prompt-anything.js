@@ -128,6 +128,11 @@ async function promptAgainstHighlightedText(
     streaming: true,
     callbacks: [
       {
+        handleLLMStart: async () => {
+          log(`handleLLMStart`);
+          toast(`Generating...`, { duration: 1000 });
+          // render initial message
+        },
         handleLLMNewToken: async (token) => {
           log(`handleLLMNewToken`);
           // each new token is appended to the current message
