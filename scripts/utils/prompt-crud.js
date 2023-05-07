@@ -140,19 +140,18 @@ export const promptCategory = async () => {
   await generateMarkdown();
 };
 
-const generateMarkdown = async () => {
+export const generateMarkdown = async () => {
   let markdown = "# Prompts\n\n";
-  let promptsObject = db("prompts").data;
-  for (const key in promptsObject) {
+  let promptsObject = await db("prompts");
+  for (const key in promptsObject.data) {
     const { name, description, prompt, content } = promptsObject[key];
     const promptContent = prompt || content;
 
     markdown += `## ${name}\n_${description}_\n\n${promptContent}\n\n`;
   }
-  await div(md(markdown));
-  return markdown;
+  await writeFile("./db/prompts.md", markdown);
+  // await div(md(markdown));
 };
-
 /**
  * Returns the id of the selected prompt
  * @returns {Promise<void>}
@@ -194,5 +193,4 @@ and updating any needed meaning or context.`,
   });
 
   await prompts.write();
-  await generateMarkdown();
 };
