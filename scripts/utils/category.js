@@ -28,61 +28,61 @@ export const createTag = async () => {
   toast(`${tagToAdd} added`);
 };
 
-/**
- * Update an existing prompt in the db
- * @returns {Promise<void>}
- */
-export const updatePrompt = async () => {
-  let prompts = await db("prompts");
-  let promptToUpdate = await arg(
-    "Choose a prompt to update",
-    Object.values(prompts.data).map((prompt) => prompt.name)
-  );
+// /**
+//  * Update an existing prompt in the db
+//  * @returns {Promise<void>}
+//  */
+// export const updatePrompt = async () => {
+//   let prompts = await db("prompts");
+//   let promptToUpdate = await arg(
+//     "Choose a prompt to update",
+//     Object.values(prompts.data).map((prompt) => prompt.name)
+//   );
 
-  let idToUpdate = Object.keys(prompts.data).find(
-    (key) => prompts.data[key].name === promptToUpdate
-  );
+//   let idToUpdate = Object.keys(prompts.data).find(
+//     (key) => prompts.data[key].name === promptToUpdate
+//   );
 
-  let updateSelection = await arg("What would you like to update?", [
-    "Name",
-    "Description",
-    "Content",
-    "Categories",
-  ]);
+//   let updateSelection = await arg("What would you like to update?", [
+//     "Name",
+//     "Description",
+//     "Content",
+//     "Categories",
+//   ]);
 
-  switch (updateSelection) {
-    case "Name":
-      prompts.data[idToUpdate].name = await arg({
-        placeholder: prompts.data[idToUpdate].name,
-        html: prompts.data[idToUpdate].name,
-        strict: false,
-        defaultValue: prompts.data[idToUpdate].name,
-      });
-      break;
-    case "Description":
-      prompts.data[idToUpdate].description = (
-        await arg({
-          placeholder: prompts.data[idToUpdate].description,
-          defaultValue: prompts.data[idToUpdate].description,
-        })
-      ).trim();
-      break;
-    case "Content":
-      prompts.data[idToUpdate].content = await editor({
-        hint: "Update the prompt content",
-        html: prompts.data[idToUpdate].content,
-      });
-      break;
-    case "Categories":
-      prompts.data[idToUpdate].model = await readTag();
-      break;
-    default:
-      throw new Error("Invalid selection");
-  }
+//   switch (updateSelection) {
+//     case "Name":
+//       prompts.data[idToUpdate].name = await arg({
+//         placeholder: prompts.data[idToUpdate].name,
+//         html: prompts.data[idToUpdate].name,
+//         strict: false,
+//         defaultValue: prompts.data[idToUpdate].name,
+//       });
+//       break;
+//     case "Description":
+//       prompts.data[idToUpdate].description = (
+//         await arg({
+//           placeholder: prompts.data[idToUpdate].description,
+//           defaultValue: prompts.data[idToUpdate].description,
+//         })
+//       ).trim();
+//       break;
+//     case "Content":
+//       prompts.data[idToUpdate].content = await editor({
+//         hint: "Update the prompt content",
+//         html: prompts.data[idToUpdate].content,
+//       });
+//       break;
+//     case "Categories":
+//       prompts.data[idToUpdate].model = await readTag();
+//       break;
+//     default:
+//       throw new Error("Invalid selection");
+//   }
 
-  await prompts.write();
-  await generateMarkdown();
-};
+//   await prompts.write();
+//   await generateMarkdown();
+// };
 
 /**
  * Delete a tag from the db

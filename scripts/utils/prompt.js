@@ -96,7 +96,7 @@ export const updatePrompt = async () => {
     model: await readTag(),
   };
   await prompts.write();
-  await generateMarkdown();
+  await generateMarkdown(false);
 };
 
 /**
@@ -123,7 +123,7 @@ export const deletePrompt = async () => {
   delete prompts.data[idToDelete];
 
   await prompts.write();
-  await generateMarkdown();
+  await generateMarkdown(false);
 };
 
 /**
@@ -143,10 +143,10 @@ export const promptCategory = async () => {
   prompts.data[idToTag].model = readTag();
 
   await prompts.write();
-  await generateMarkdown();
+  await generateMarkdown(false);
 };
 
-export const generateMarkdown = async () => {
+export const generateMarkdown = async (display = true) => {
   let markdown = "# Prompts\n\n";
   let promptsObject = await db("prompts");
   for (const key in promptsObject.data) {

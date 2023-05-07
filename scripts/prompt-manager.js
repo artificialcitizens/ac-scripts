@@ -44,29 +44,16 @@ const renderPrompts = async () => {
 };
 
 onTab("Prompts", async (input) => {
-  log("input", input);
   await renderPrompts();
   setTab("Prompts");
 });
 
 onTab("Categories", async (input) => {
-  log("input", input);
   await filterPromptsByTag();
   setTab("Prompts");
 });
 
 onTab("Settings", async (input) => {
   await settings();
-  setTab("Prompts");
-});
-
-onTab("Exit", async (input) => {
-  const confirmation = await arg("Are you sure you want to exit?", [
-    "Yes",
-    "No",
-  ]);
-  if (confirmation === "Yes") {
-    exit();
-  }
   setTab("Prompts");
 });
