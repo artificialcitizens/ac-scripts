@@ -119,6 +119,7 @@ async function promptAgainstHighlightedText(
   };
 
   let currentMessage = "";
+  let toast = null;
   const llm = new ChatOpenAI({
     // 0 = "precise", 1 = "creative"
     temperature: 0.3,
@@ -130,11 +131,12 @@ async function promptAgainstHighlightedText(
       {
         handleLLMStart: async () => {
           log(`handleLLMStart`);
-          toast(`Generating...`, { duration: 1000 });
+          toast = toast(`Generating...`, { duration: 1000 });
           // render initial message
         },
         handleLLMNewToken: async (token) => {
-          log(`handleLLMNewToken`);
+          toast.exit();
+          // log(`handleLLMNewToken`);
           // each new token is appended to the current message
           // and then rendered to the screen
           currentMessage += token;
@@ -176,9 +178,9 @@ async function promptAgainstHighlightedText(
               // prompt again with new prompt
               // press enter to use original prompt
               const followUp = await arg({
-                placeholder: userSystemInput,
-                hint: "Press enter to use the same prompt",
+                hint: "Update prompt and try again",
               });
+              log({ followUp });
               await processMessage(followUp);
               break;
             case "edit":
