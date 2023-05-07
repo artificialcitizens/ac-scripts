@@ -75,10 +75,10 @@ export const editPrompts = async () => {
   await actions[selectedAction]();
 };
 
-// onTab("Prompts", async (input) => {
-//   log("input", input);
-//   await renderPrompts();
-// });
+onTab("Prompts", async (input) => {
+  log("input", input);
+  await renderPrompts();
+});
 
 onTab("Manage Prompts", async (input) => {
   await editPrompts();

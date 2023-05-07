@@ -144,10 +144,9 @@ export const generateMarkdown = async () => {
   let markdown = "# Prompts\n\n";
   let promptsObject = await db("prompts");
   for (const key in promptsObject.data) {
-    const { name, description, prompt, content } = promptsObject[key];
-    const promptContent = prompt || content;
+    const { name, description, content } = promptsObject[key];
 
-    markdown += `## ${name}\n_${description}_\n\n${promptContent}\n\n`;
+    markdown += `## ${name}\n_${description}_\n\n\`\`\`plaintext\n${content}\n\`\`\`\n\n`;
   }
   await writeFile("./db/prompts.md", markdown);
   // await div(md(markdown));
