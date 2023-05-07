@@ -29,25 +29,59 @@ export const createTag = async () => {
 };
 
 /**
- * Update a tag in the db
+ * Update an existing prompt in the db
  * @returns {Promise<void>}
  */
-export const updateTag = async () => {
-  const tagsDb = await db("prompt-tags");
-  await tagsDb.read();
-
-  let tagToUpdate = await arg("Select a tag to update", tagsDb.items);
-  let updatedTag = await arg({
-    placeholder: `${tagToUpdate}`,
-    defaultValue: tagToUpdate,
-  });
-
-  tagsDb.items = tagsDb.items.map((tag) =>
-    tag === tagToUpdate ? updatedTag : tag
+export const updatePrompt = async () => {
+  let prompts = await db("prompts");
+  let promptToUpdate = await arg(
+    "Choose a prompt to update",
+    Object.values(prompts.data).map((prompt) => prompt.name)
   );
 
-  await tagsDb.write();
-  toast(`${tagToUpdate} updated to ${updatedTag}`);
+  let idToUpdate = Object.keys(prompts.data).find(
+    (key) => prompts.data[key].name === promptToUpdate
+  );
+
+  let updateSelection = await arg("What would you like to update?", [
+    "Name",
+    "Description",
+    "Content",
+    "Categories",
+  ]);
+
+  switch (updateSelection) {
+    case "Name":
+      prompts.data[idToUpdate].name = await arg({
+        placeholder: prompts.data[idToUpdate].name,
+        html: prompts.data[idToUpdate].name,
+        strict: false,
+        defaultValue: prompts.data[idToUpdate].name,
+      });
+      break;
+    case "Description":
+      prompts.data[idToUpdate].description = (
+        await arg({
+          placeholder: prompts.data[idToUpdate].description,
+          defaultValue: prompts.data[idToUpdate].description,
+        })
+      ).trim();
+      break;
+    case "Content":
+      prompts.data[idToUpdate].content = await editor({
+        hint: "Update the prompt content",
+        html: prompts.data[idToUpdate].content,
+      });
+      break;
+    case "Categories":
+      prompts.data[idToUpdate].model = await readTag();
+      break;
+    default:
+      throw new Error("Invalid selection");
+  }
+
+  await prompts.write();
+  await generateMarkdown();
 };
 
 /**
@@ -58,7 +92,7 @@ export const deleteTag = async () => {
   const tagsDb = await db("prompt-tags");
   await tagsDb.read();
 
-  let tagToDelete = await mini("Delete a tag", tagsDb.items);
+  let tagToDelete = await arg("Delete a tag", tagsDb.items);
 
   tagsDb.items = tagsDb.items.filter((tag) => tag !== tagToDelete);
 
@@ -79,7 +113,7 @@ export const readTag = async () => {
   let selecting = true;
   while (selecting) {
     const availableTags = allTags.filter((tag) => !selectedTags.includes(tag));
-    let tagToRead = await mini("Read a tag", [...availableTags, "Done"]);
+    let tagToRead = await arg("Read a tag", [...availableTags, "Done"]);
     if (tagToRead === "Done") {
       selecting = false;
     } else {
@@ -98,7 +132,7 @@ export const readTag = async () => {
 export const removeTag = async (selectedTags) => {
   let removing = true;
   while (removing) {
-    let tagToRemove = await mini("Remove a tag", [...selectedTags, "Done"]);
+    let tagToRemove = await arg("Remove a tag", [...selectedTags, "Done"]);
     if (tagToRemove === "Done") {
       removing = false;
     } else {

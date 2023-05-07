@@ -1,6 +1,5 @@
 // Menu: Prompts CRUD Example
 // Description: Add/remove/update objects from db
-import { readTag } from "./category-crud.js";
 import "@johnlindquist/kit";
 /**
  * Add a new prompt to the db
@@ -58,10 +57,17 @@ export const updatePrompt = async () => {
     (key) => prompts.data[key].name === promptToUpdate
   );
 
+  let updateSelection = await arg("What would you like to update?", [
+    "Name",
+    "Description",
+    "Content",
+    "Categories",
+  ]);
+
   prompts.data[idToUpdate] = {
     name: await arg({
       placeholder: prompts.data[idToUpdate].name,
-      formData: prompts.data[idToUpdate].name,
+      html: prompts.data[idToUpdate].name,
       strict: false,
       defaultValue: prompts.data[idToUpdate].name,
       onSubmit: (name) => {
@@ -108,8 +114,8 @@ export const deletePrompt = async () => {
     (key) => prompts.data[key].name === promptToDelete
   );
   let confirmation = await arg("Are you sure you want to delete this prompt?", [
-    "Yes",
-    "No",
+    "[Y]es",
+    "[N]o",
   ]);
   if (confirmation === "No") {
     return;
@@ -149,8 +155,38 @@ export const generateMarkdown = async () => {
     markdown += `## ${name}\n_${description}_\n\n\`\`\`plaintext\n${content}\n\`\`\`\n\n`;
   }
   await writeFile("./db/prompts.md", markdown);
-  // await div(md(markdown));
+  await div(md(markdown));
 };
+
+//**
+// Filter prompts by tag
+//*/
+export const filterPromptsByTag = async () => {
+  const prompts = await db("prompts");
+  const tag = await arg("Filter prompts by tag", [
+    ...new Set(
+      Object.values(prompts.data)
+        .map((prompt) => prompt.model)
+        .flat()
+    ),
+  ]);
+  const filteredPrompts = Object.values(prompts.data).filter((prompt) =>
+    prompt.model.includes(tag)
+  );
+  const prompt = await arg(
+    "Choose a prompt",
+    filteredPrompts.map((prompt) => prompt.name)
+  );
+  const id = Object.keys(prompts.data).find(
+    (key) => prompts.data[key].name === prompt
+  );
+  const { name, description, content } = prompts.data[id];
+  await div(
+    `## ${name}\n_${description}_\n\n\`\`\`plaintext\n${content}\n\`\`\`\n\n`
+  );
+};
+
+//@TODO: Move seed data to a separate file
 /**
  * Returns the id of the selected prompt
  * @returns {Promise<void>}

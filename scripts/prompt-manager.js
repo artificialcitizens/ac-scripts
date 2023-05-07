@@ -1,3 +1,4 @@
+// Preview: docs
 // Name: Prompt Manager
 // Description: Manage your prompt templates
 // Author: Josh Mabry
@@ -9,12 +10,8 @@
 import "@johnlindquist/kit";
 import { createGuideConfig } from "@johnlindquist/kit/main/main-helper.js";
 
-import {
-  createPrompt,
-  updatePrompt,
-  deletePrompt,
-  generateMarkdown,
-} from "./utils/prompt-crud.js";
+import { filterPromptsByTag } from "./utils/prompt.js";
+import { settings } from "./utils/settings.js";
 
 const renderPrompts = async () => {
   let prompt = await docs(
@@ -23,7 +20,7 @@ const renderPrompts = async () => {
       name: "Prompts",
       itemHeight: PROMPT.ITEM.HEIGHT.SM,
       input: arg?.input || "",
-      placeholder: "Browse API",
+      placeholder: "Browse Prompts",
       enter: `Suggest Edit`,
       onNoChoices: async (input) => {
         setPanel(
@@ -45,41 +42,31 @@ const renderPrompts = async () => {
     // await mainScript("", "API");
   }
 };
-export const editPrompts = async () => {
-  const actions = {
-    create: createPrompt,
-    update: updatePrompt,
-    delete: deletePrompt,
-    generate: generateMarkdown,
-  };
-
-  const selectedAction = await arg("Choose an action", [
-    {
-      name: "Create prompt",
-      value: "create",
-    },
-    {
-      name: "Update prompt",
-      value: "update",
-    },
-    {
-      name: "Delete prompt",
-      value: "delete",
-    },
-    {
-      name: "Generate Markdown",
-      value: "generate",
-    },
-  ]);
-
-  await actions[selectedAction]();
-};
 
 onTab("Prompts", async (input) => {
   log("input", input);
   await renderPrompts();
+  setTab("Prompts");
 });
 
-onTab("Manage Prompts", async (input) => {
-  await editPrompts();
+onTab("Categories", async (input) => {
+  log("input", input);
+  await filterPromptsByTag();
+  setTab("Prompts");
+});
+
+onTab("Settings", async (input) => {
+  await settings();
+  setTab("Prompts");
+});
+
+onTab("Exit", async (input) => {
+  const confirmation = await arg("Are you sure you want to exit?", [
+    "Yes",
+    "No",
+  ]);
+  if (confirmation === "Yes") {
+    exit();
+  }
+  setTab("Prompts");
 });
