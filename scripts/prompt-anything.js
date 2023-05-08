@@ -135,7 +135,6 @@ async function promptAgainstHighlightedText(
           // render initial message
         },
         handleLLMNewToken: async (token) => {
-          toast.exit();
           // log(`handleLLMNewToken`);
           // each new token is appended to the current message
           // and then rendered to the screen
