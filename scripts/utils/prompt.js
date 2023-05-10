@@ -1,7 +1,7 @@
 // Menu: Prompts CRUD Example
 // Description: Add/remove/update objects from db
 import "@johnlindquist/kit";
-import { selectTag } from "./tags.js";
+import { renderTags } from "./tags.js";
 /**
  * Add a new prompt to the db
  * @returns {Promise<void>}
@@ -20,7 +20,7 @@ export const createPrompt = async (dbName) => {
     snippet: await editor({
       hint: "Enter the prompt content",
     }),
-    tags: await selectTag(dbName),
+    tags: await renderTags(dbName),
   };
   await prompts.write();
 };
@@ -71,7 +71,7 @@ export const updatePrompt = async (dbName) => {
       });
       break;
     case "Tags":
-      prompts.data.snips[idToUpdate].tags = await selectTag();
+      prompts.data.snips[idToUpdate].tags = await renderTags();
       break;
     default:
       break;
@@ -137,7 +137,19 @@ export const renderPrompts = async (dbName) => {
     },
     promptNames
   );
-  log(prompt);
+  const id = Object.keys(prompts.data.snips).find(
+    (key) => prompts.data.snips[key].name === prompt
+  );
+  const { name, snippet } = prompts.data.snips[id];
+  await template(snippet, {
+    onSubmit: async (snippet) => {
+      await clipboard.writeText(snippet);
+      toast(`Copied ${name} to clipboard!`);
+      setTimeout(() => {
+        exit(1);
+      }, 1000);
+    },
+  });
 };
 
 /**

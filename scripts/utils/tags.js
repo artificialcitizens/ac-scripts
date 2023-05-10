@@ -31,25 +31,6 @@ export const deleteTag = async (dbName) => {
   toast(`${tagToDelete} deleted`);
 };
 
-/**
- * Remove a tag from the selected tags list
- *
- * @param {string[]} selectedTags - The list of selected tags
- * @returns {Promise<string[]>}
- */
-export const removeTag = async (selectedTags) => {
-  let removing = true;
-  while (removing) {
-    let tagToRemove = await arg("Remove a tag", [...selectedTags, "Done"]);
-    if (tagToRemove === "Done") {
-      removing = false;
-    } else {
-      selectedTags = selectedTags.filter((tag) => tag !== tagToRemove);
-    }
-  }
-  return selectedTags;
-};
-
 //**
 // Filter prompts by tag
 //*/
@@ -62,7 +43,19 @@ export const filterPromptsByTag = async (dbName) => {
   );
   const prompt = await arg(
     "Choose a prompt",
-    filteredPrompts.map((prompt) => prompt.name)
+    filteredPrompts.map((p) => {
+      return {
+        name: p.name,
+        preview: async () =>
+          `<div class="p-2 mx-2">
+          <h2 class="p-3">${p.name}</h2>
+          <p class="whitespace-pre-wrap p-4 italic">${p.description}</p>
+          <hr/>
+          <p class="my-4 p-2 whitespace-pre-wrap">${p.snippet}</p>
+        </div>`,
+        value: p.name,
+      };
+    })
   );
   const id = Object.keys(prompts.data.snips).find(
     (key) => prompts.data.snips[key].name === prompt
@@ -84,7 +77,7 @@ export const filterPromptsByTag = async (dbName) => {
  *
  * @returns {Promise<string>}
  */
-export const selectTag = async (dbName) => {
+export const renderTags = async (dbName) => {
   const tagsDb = await db(dbName);
   await tagsDb.read();
   const allTags = [...tagsDb.data.tags];
