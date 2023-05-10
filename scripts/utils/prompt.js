@@ -1,7 +1,7 @@
 // Menu: Prompts CRUD Example
 // Description: Add/remove/update objects from db
 import "@johnlindquist/kit";
-import { selectTag } from "./tag.js";
+import { selectTag } from "./tags.js";
 /**
  * Add a new prompt to the db
  * @returns {Promise<void>}

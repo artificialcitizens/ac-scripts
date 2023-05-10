@@ -2,8 +2,8 @@
 // Description: Add/remove/update objects from db
 
 import "@johnlindquist/kit";
-import { createPrompt, updatePrompt, deletePrompt } from "./prompt.js";
-import { createTag, deleteTag } from "./tag.js";
+import { editPrompts } from "./prompt.js";
+import { editTags } from "./tags.js";
 
 const exportJSON = async (dbName) => {
   log(dbName);

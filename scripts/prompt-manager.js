@@ -9,7 +9,7 @@
 import "@johnlindquist/kit";
 
 import { renderPrompts, seedPrompts } from "./utils/prompt.js";
-import { filterPromptsByTag } from "./utils/tag.js";
+import { filterPromptsByTag } from "./utils/tags.js";
 import { settings } from "./utils/settings.js";
 
 onTab("Prompts", async (input) => {
