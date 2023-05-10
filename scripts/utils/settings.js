@@ -2,78 +2,50 @@
 // Description: Add/remove/update objects from db
 
 import "@johnlindquist/kit";
-import {
-  createPrompt,
-  updatePrompt,
-  deletePrompt,
-  generateMarkdown,
-} from "./prompt.js";
-import { createTag, deleteTag } from "./category.js";
+import { createPrompt, updatePrompt, deletePrompt } from "./prompt.js";
+import { createTag, deleteTag } from "./tag.js";
 
-export const editPrompts = async () => {
-  const actions = {
-    create: createPrompt,
-    update: updatePrompt,
-    delete: deletePrompt,
-    // generate: generateMarkdown,
-  };
-
-  const selectedAction = await arg("Choose an action", [
-    {
-      name: "Create prompt",
-      value: "create",
-    },
-    {
-      name: "Update prompt",
-      value: "update",
-    },
-    {
-      name: "Delete prompt",
-      value: "delete",
-    },
-    // {
-    //   name: "Generate Markdown",
-    //   value: "generate",
-    // },
-  ]);
-
-  await actions[selectedAction]();
+const exportJSON = async (dbName) => {
+  log(dbName);
+  const dBase = await db(dbName);
+  await dBase.read();
+  log(dBase.data.snips);
+  const json = JSON.stringify(dBase.data, null, 2);
+  const path = await selectFolder("Where would you like to export to?");
+  await writeFile(`${path}/${dbName}-snippets.json`, json);
 };
 
-export const editCategories = async () => {
-  const actions = {
-    create: createTag,
-    // update: updateTag,
-    delete: deleteTag,
-  };
+const exportMarkdown = async (dbName) => {
+  let markdown = `# ${dbName}\n\n`;
+  let promptsObject = await db(dbName);
+  await promptsObject.read();
+  for (const key in promptsObject.data.snips) {
+    const { name, description, snippet } = promptsObject.data.snips[key];
 
-  const selectedAction = await arg("Choose an action", [
-    {
-      name: "Create category",
-      value: "create",
-    },
-    // {
-    //   name: "Update category",
-    //   value: "update",
-    // },
-    {
-      name: "Delete category",
-      value: "delete",
-    },
-  ]);
+    markdown += `## ${name}\n_${description}_\n\n\`\`\`plaintext\n${snippet}\n\`\`\`\n\n`;
+  }
+  const path = await selectFolder("Where would you like to export to?");
+  // await selectFolder(`${path}-snippets.md`, markdown);
 
-  await actions[selectedAction]();
+  await writeFile(`${path}/${dbName}-snippets.md`, markdown);
 };
 
-export const settings = async () => {
+export const settings = async (dbName) => {
   const actions = {
-    "Edit categories": editCategories,
-    "Edit prompts": editPrompts,
-    "View Markdown": generateMarkdown,
-    Exit: async () => {
-      const confirmation = await arg("Are you sure you want to exit?", [
-        "Yes",
-        "No",
+    "Manage Prompts": () => editPrompts(dbName),
+    "Manage Tags": () => editTags(dbName),
+    Export: async () => {
+      const format = await arg("Select format to export as", [
+        "Markdown",
+        "JSON",
+      ]);
+      format === "Markdown" && (await exportMarkdown(dbName));
+      format === "JSON" && (await exportJSON(dbName));
+    },
+    Quit: async () => {
+      const confirmation = await arg("Are you sure you want to quit?", [
+        "[Y]es",
+        "[N]o",
       ]);
       if (confirmation === "Yes") {
         exit();
@@ -83,23 +55,10 @@ export const settings = async () => {
   };
 
   const selectedAction = await arg("Choose an action", [
-    {
-      name: "Edit categories",
-      value: "Edit categories",
-    },
-    {
-      name: "Edit prompts",
-      value: "Edit prompts",
-    },
-    {
-      name: "View Markdown",
-      value: "View Markdown",
-    },
-    {
-      name: "Exit",
-      value: "Exit",
-    },
+    "Manage Prompts",
+    "Manage Tags",
+    "Export",
+    "Quit",
   ]);
-  log(selectedAction);
   await actions[selectedAction]();
 };

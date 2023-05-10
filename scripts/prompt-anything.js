@@ -52,8 +52,15 @@ let { HumanChatMessage, SystemChatMessage } = await import("langchain/schema");
 let openAIApiKey = await env("OPENAI_API_KEY", {
   hint: `Grab a key from <a href="https://platform.openai.com/account/api-keys">here</a>`,
 });
+
+const prompts = await db("prompts");
+prompts.read();
+const promptChoices = Object.entries(prompts.data.snips).map(([key, value]) => {
+  return { name: value.name, value: value.snippet };
+});
 // System input / Task for the AI to follow
-let userSystemInput = await arg("Summarize this passage");
+let userSystemInput = await arg("Summarize this passage", promptChoices);
+
 // User Prompt from highlighted text
 let userPrompt = await getSelectedText();
 
@@ -97,7 +104,7 @@ async function promptAgainstHighlightedText(
   //########
   // exit script on cancel
   const cancelChat = () => {
-    process.exit(1);
+    exit(1);
   };
 
   /**
@@ -106,7 +113,7 @@ async function promptAgainstHighlightedText(
    */
   const pasteTextAndExit = async (text) => {
     await setSelectedText(text);
-    process.exit(1);
+    exit(1);
   };
 
   /**
@@ -115,7 +122,7 @@ async function promptAgainstHighlightedText(
    */
   const copyToClipboardAndExit = async (text) => {
     await clipboard.writeText(currentMessage);
-    process.exit(1);
+    exit(1);
   };
 
   let currentMessage = "";
