@@ -59,7 +59,65 @@ const promptChoices = Object.entries(prompts.data.snips).map(([key, value]) => {
   return { name: value.name, value: value.snippet };
 });
 // System input / Task for the AI to follow
-let userSystemInput = await arg("Summarize this passage", promptChoices);
+let userSystemInput = await arg(
+  {
+    placeholder: "Summarize this passage",
+    shortcuts: [
+      {
+        name: "New",
+        key: `${cmd}+n`,
+        bar: "left",
+        onPress: async (input) => {
+          await createPrompt(dbName);
+          await renderPrompts(dbName);
+        },
+      },
+      {
+        name: "Edit",
+        key: `${cmd}+x`,
+        bar: "left",
+        onPress: async (input, { focused }) => {
+          await updatePrompt(dbName, focused.name);
+          await renderPrompts(dbName);
+        },
+      },
+      {
+        name: "Copy",
+        key: `${cmd}+c`,
+        bar: "right",
+        onPress: (input, { focused }) => {
+          clipboard.writeText(focused.value);
+          toast(`Copied ${focused.name}`);
+          setTimeout(() => {
+            exit();
+          }, 1000);
+        },
+      },
+      {
+        name: "Delete",
+        key: `${cmd}+d`,
+        bar: "left",
+        onPress: async (input, { focused }) => {
+          await deletePrompt(dbName, focused.name);
+          await renderPrompts(dbName);
+        },
+      },
+      {
+        name: "Paste",
+        key: `${cmd}+p`,
+        bar: "right",
+        onPress: (input, { focused }) => {
+          setSelectedText(focused.value);
+          toast(`Copied ${focused.name}`);
+          setTimeout(() => {
+            exit();
+          }, 1000);
+        },
+      },
+    ],
+  },
+  promptChoices
+);
 
 // User Prompt from highlighted text
 let userPrompt = await getSelectedText();

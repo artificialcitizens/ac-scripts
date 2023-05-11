@@ -29,19 +29,22 @@ export const createPrompt = async (dbName) => {
  * Update an existing prompt in the db
  * @returns {Promise<void>}
  */
-export const updatePrompt = async (dbName) => {
-  let prompts = await db(dbName);
+export const updatePrompt = async (dbName, snippetName) => {
+  const prompts = await db(dbName);
   await prompts.read();
-  let promptToUpdate = await arg(
-    "Choose a prompt to update",
-    Object.values(prompts.data.snips).map((prompt) => prompt.name)
+  let promptToUpdate;
+  if (!snippetName) {
+    promptToUpdate = await arg(
+      "Choose a prompt to update",
+      Object.values(prompts.data.snips).map((prompt) => prompt.name)
+    );
+  }
+
+  const idToUpdate = Object.keys(prompts.data.snips).find(
+    (key) => prompts.data.snips[key].name === promptToUpdate || snippetName
   );
 
-  let idToUpdate = Object.keys(prompts.data.snips).find(
-    (key) => prompts.data.snips[key].name === promptToUpdate
-  );
-
-  let updateSelection = await arg("What would you like to update?", [
+  const updateSelection = await arg("What would you like to update?", [
     "Name",
     "Description",
     "Content",
@@ -83,22 +86,24 @@ export const updatePrompt = async (dbName) => {
  * Delete a prompt from the db
  * @returns {Promise<void>}
  */
-export const deletePrompt = async (dbName) => {
-  let prompts = await db(dbName);
+export const deletePrompt = async (dbName, snippetName) => {
+  const prompts = await db(dbName);
   await prompts.read();
-  let promptToDelete = await arg(
-    "Delete a Prompt",
-    Object.values(prompts.data.snips).map((p) => p.name)
-  );
-
+  let promptToDelete;
+  if (!snippetName) {
+    promptToDelete = await arg(
+      "Delete a Prompt",
+      Object.values(prompts.data.snips).map((p) => p.name)
+    );
+  }
   const id = Object.keys(prompts.data.snips).find(
-    (key) => prompts.data.snips[key].name === promptToDelete
+    (key) => prompts.data.snips[key].name === promptToDelete || snippetName
   );
 
-  let confirmation = await arg("Are you sure you want to delete this prompt?", [
-    "[Y]es",
-    "[N]o",
-  ]);
+  const confirmation = await arg(
+    "Are you sure you want to delete this prompt?",
+    ["Yes", "No"]
+  );
   if (confirmation === "No") {
     return;
   }
@@ -114,8 +119,74 @@ export const deletePrompt = async (dbName) => {
 export const renderPrompts = async (dbName) => {
   const prompts = await db(dbName);
   await prompts.read();
-  const promptNames = await arg(
-    "Choose a prompt",
+  const snippetValue = await arg(
+    {
+      placeholder: "Choose a prompt",
+      enter: "Open",
+      onAbandon: false,
+      onBlur: false,
+      shortcuts: [
+        {
+          name: "New",
+          key: `${cmd}+n`,
+          bar: "left",
+          onPress: async (input) => {
+            await createPrompt(dbName);
+            await renderPrompts(dbName);
+          },
+        },
+        {
+          name: "Edit",
+          key: `${cmd}+x`,
+          bar: "left",
+          onPress: async (input, { focused }) => {
+            await updatePrompt(dbName, focused.name);
+            await renderPrompts(dbName);
+          },
+        },
+        {
+          name: "Copy",
+          key: `${cmd}+c`,
+          bar: "right",
+          onPress: (input, { focused }) => {
+            clipboard.writeText(focused.value);
+            toast(`Copied ${focused.name}`);
+            setTimeout(() => {
+              exit();
+            }, 1000);
+          },
+        },
+        {
+          name: "Delete",
+          key: `${cmd}+d`,
+          bar: "left",
+          onPress: async (input, { focused }) => {
+            await deletePrompt(dbName, focused.name);
+            await renderPrompts(dbName);
+          },
+        },
+        {
+          name: "Paste",
+          key: `${cmd}+p`,
+          bar: "right",
+          onPress: (input, { focused }) => {
+            setSelectedText(focused.value);
+            toast(`Copied ${focused.name}`);
+            setTimeout(() => {
+              exit();
+            }, 1000);
+          },
+        },
+        {
+          name: "Scroll",
+          key: `${cmd}+down`,
+          bar: "right",
+          onPress: (input, { focused }) => {
+            focused.scrollDown();
+          },
+        },
+      ],
+    },
     Object.values(prompts.data.snips).map((p) => {
       return {
         name: p.name,
@@ -126,29 +197,28 @@ export const renderPrompts = async (dbName) => {
           <hr/>
           <p class="my-4 p-2 whitespace-pre-wrap">${p.snippet}</p>
         </div>`,
-        value: p.name,
+        value: p.snippet,
       };
     })
   );
-  const prompt = await arg(
-    "Choose a prompt",
-    {
-      placeholder: "Choose a prompt",
-    },
-    promptNames
-  );
-  const id = Object.keys(prompts.data.snips).find(
-    (key) => prompts.data.snips[key].name === prompt
-  );
-  const { name, snippet } = prompts.data.snips[id];
-  await template(snippet, {
-    onSubmit: async (snippet) => {
-      await clipboard.writeText(snippet);
-      toast(`Copied ${name} to clipboard!`);
-      setTimeout(() => {
-        exit(1);
-      }, 1000);
-    },
+
+  await editor({
+    value: snippetValue,
+    hint: "Edit the prompt and copy it to your clipboard",
+    shortcuts: [
+      {
+        name: "Copy",
+        key: `${cmd}+c`,
+        bar: "right",
+        onPress: async (input) => {
+          await clipboard.writeText(input);
+          toast(`Copied to clipboard`);
+          setTimeout(() => {
+            exit();
+          }, 1000);
+        },
+      },
+    ],
   });
 };
 
