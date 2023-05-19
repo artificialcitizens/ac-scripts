@@ -37,6 +37,7 @@ Useful for summarizing text, generating a title, or any other task you can think
 // ScriptKit Imports
 //##################
 import "@johnlindquist/kit";
+import { getSnipsByTag } from "./utils/prompt.js";
 
 //##################
 // LangChain Imports
@@ -53,68 +54,16 @@ let openAIApiKey = await env("OPENAI_API_KEY", {
   hint: `Grab a key from <a href="https://platform.openai.com/account/api-keys">here</a>`,
 });
 
-const prompts = await db("prompts");
-prompts.read();
-const promptChoices = Object.entries(prompts.data.snips).map(([key, value]) => {
+const prompts = await getSnipsByTag("prompt-anything");
+const promptChoices = Object.entries(prompts).map(([key, value]) => {
   return { name: value.name, value: value.snippet };
 });
+
 // System input / Task for the AI to follow
 let userSystemInput = await arg(
   {
     placeholder: "Summarize this passage",
-    shortcuts: [
-      {
-        name: "New",
-        key: `${cmd}+n`,
-        bar: "left",
-        onPress: async (input) => {
-          await createPrompt(dbName);
-          await renderPrompts(dbName);
-        },
-      },
-      {
-        name: "Edit",
-        key: `${cmd}+x`,
-        bar: "left",
-        onPress: async (input, { focused }) => {
-          await updatePrompt(dbName, focused.name);
-          await renderPrompts(dbName);
-        },
-      },
-      {
-        name: "Copy",
-        key: `${cmd}+c`,
-        bar: "right",
-        onPress: (input, { focused }) => {
-          clipboard.writeText(focused.value);
-          toast(`Copied ${focused.name}`);
-          setTimeout(() => {
-            exit();
-          }, 1000);
-        },
-      },
-      {
-        name: "Delete",
-        key: `${cmd}+d`,
-        bar: "left",
-        onPress: async (input, { focused }) => {
-          await deletePrompt(dbName, focused.name);
-          await renderPrompts(dbName);
-        },
-      },
-      {
-        name: "Paste",
-        key: `${cmd}+p`,
-        bar: "right",
-        onPress: (input, { focused }) => {
-          setSelectedText(focused.value);
-          toast(`Copied ${focused.name}`);
-          setTimeout(() => {
-            exit();
-          }, 1000);
-        },
-      },
-    ],
+    strict: false,
   },
   promptChoices
 );
@@ -162,7 +111,7 @@ async function promptAgainstHighlightedText(
   //########
   // exit script on cancel
   const cancelChat = () => {
-    exit(1);
+    exit();
   };
 
   /**
@@ -171,7 +120,7 @@ async function promptAgainstHighlightedText(
    */
   const pasteTextAndExit = async (text) => {
     await setSelectedText(text);
-    exit(1);
+    exit();
   };
 
   /**
@@ -180,7 +129,7 @@ async function promptAgainstHighlightedText(
    */
   const copyToClipboardAndExit = async (text) => {
     await clipboard.writeText(currentMessage);
-    exit(1);
+    exit();
   };
 
   let currentMessage = "";
@@ -213,7 +162,7 @@ async function promptAgainstHighlightedText(
             onBackspace: cancelChat,
             // if this is set to false you can click outside the window to cancel
             // which works, but would be nice to also have ESC work
-            ignoreBlur: false,
+            // ignoreBlur: false,
             focus: true,
             // hint: `Press ESC to cancel`,
           });

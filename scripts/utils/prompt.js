@@ -1,7 +1,6 @@
-// Menu: Prompts CRUD Example
-// Description: Add/remove/update objects from db
 import "@johnlindquist/kit";
 import { renderTags } from "./tags.js";
+import { stripSquareBrackets } from "./helpers.js";
 /**
  * Add a new prompt to the db
  * @returns {Promise<void>}
@@ -32,16 +31,19 @@ export const createPrompt = async (dbName) => {
 export const updatePrompt = async (dbName, snippetName) => {
   const prompts = await db(dbName);
   await prompts.read();
-  let promptToUpdate;
+
+  let promptToDelete;
   if (!snippetName) {
-    promptToUpdate = await arg(
-      "Choose a prompt to update",
-      Object.values(prompts.data.snips).map((prompt) => prompt.name)
+    promptToDelete = await arg(
+      "Edit a Prompt",
+      Object.values(prompts.data.snips).map((p) => p.name)
     );
+  } else {
+    promptToDelete = snippetName;
   }
 
   const idToUpdate = Object.keys(prompts.data.snips).find(
-    (key) => prompts.data.snips[key].name === promptToUpdate || snippetName
+    (key) => prompts.data.snips[key].name === promptToDelete
   );
 
   const updateSelection = await arg("What would you like to update?", [
@@ -89,27 +91,38 @@ export const updatePrompt = async (dbName, snippetName) => {
 export const deletePrompt = async (dbName, snippetName) => {
   const prompts = await db(dbName);
   await prompts.read();
+
   let promptToDelete;
   if (!snippetName) {
     promptToDelete = await arg(
       "Delete a Prompt",
       Object.values(prompts.data.snips).map((p) => p.name)
     );
+  } else {
+    promptToDelete = snippetName;
   }
+
   const id = Object.keys(prompts.data.snips).find(
-    (key) => prompts.data.snips[key].name === promptToDelete || snippetName
+    (key) => prompts.data.snips[key].name === promptToDelete
   );
+
+  if (!id) {
+    console.log("Prompt not found.");
+    return;
+  }
 
   const confirmation = await arg(
     "Are you sure you want to delete this prompt?",
     ["Yes", "No"]
   );
-  if (confirmation === "No") {
-    return;
-  }
-  delete prompts.data.snips[id];
 
-  await prompts.write();
+  if (confirmation === "Yes") {
+    delete prompts.data.snips[id];
+    await prompts.write();
+    console.log("Prompt deleted.");
+  } else {
+    console.log("Deletion cancelled.");
+  }
 };
 
 /**
@@ -171,7 +184,7 @@ export const renderPrompts = async (dbName) => {
           bar: "right",
           onPress: (input, { focused }) => {
             setSelectedText(focused.value);
-            toast(`Copied ${focused.name}`);
+            toast(`Copied ${stripSquareBrackets(focused.name)}`);
             setTimeout(() => {
               exit();
             }, 1000);
@@ -251,6 +264,35 @@ export const editPrompts = async (dbName) => {
   await actions[selectedAction]();
 };
 
+/**
+ * Filters the prompts by tag
+ * @param {*} tagName
+ * @returns
+ */
+export const getSnipsByTag = async (tagName) => {
+  const prompts = await db("prompts");
+  await prompts.read();
+  const snips = prompts.data.snips;
+  const snipsWithTag = {};
+
+  for (const snipId in snips) {
+    if (snips[snipId].tags.includes(tagName)) {
+      snipsWithTag[snipId] = snips[snipId];
+    }
+  }
+
+  return snipsWithTag;
+};
+
+// // Usage example:
+// const data = {
+//   // ... (the data object you provided)
+// };
+
+// const tagName = "chatgpt";
+// const snipsWithTag = getSnipsByTag(data, tagName);
+// console.log(snipsWithTag);
+
 //@TODO: Move seed data to a separate file
 /**
  * Returns the id of the selected prompt
@@ -262,7 +304,12 @@ export const seedPrompts = async () => {
     description: "A collection of prompts",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    tags: ["chatgpt", "stable-diffusion", "prompt-injection-competition"],
+    tags: [
+      "chatgpt",
+      "stable-diffusion",
+      "prompt-injection-competition",
+      "prompt-anywhere",
+    ],
     snips: {
       [uuid()]: {
         name: "The New Oracle",
