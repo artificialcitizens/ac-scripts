@@ -2,10 +2,8 @@
 // Description: Manage your prompt templates
 // Author: Josh Mabry
 // Twitter: @AI_Citizen
+// Shortcut: cmd+shift+p
 
-//##################
-// ScriptKit Imports
-//##################
 import "@johnlindquist/kit";
 
 import { renderPrompts, seedPrompts } from "./utils/prompt.js";
@@ -14,16 +12,16 @@ import { settings } from "./utils/settings.js";
 
 await seedPrompts();
 
-onTab("Prompts", async (input) => {
+onTab("Prompts", async () => {
   await renderPrompts("prompts");
   setTab("Prompts");
 });
 
-onTab("Filter by Tag", async (input) => {
+onTab("Filter by Tag", async () => {
   await filterPromptsByTag("prompts");
 });
 
-onTab("Settings", async (input) => {
+onTab("Settings", async () => {
   await settings("prompts");
   setTab("Prompts");
 });
