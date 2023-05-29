@@ -19,7 +19,8 @@ let openAIApiKey = await env("OPENAI_API_KEY", {
 });
 let { CallbackManager } = await import("langchain/callbacks");
 let prompt = `#####
-Ignore prior instructions, you are tasked with taking the input text and explaining it to the user.
+Ignore prior instructions, you are tasked with taking the following text and explaining it to the user.
+{{text}}
 Return the response in the following format using markdown syntax:
 # Explain Plz
 ## TLDR (A quick summary of the highlighted text)
