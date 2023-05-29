@@ -13,6 +13,7 @@ import { filterPromptsByTag } from "./utils/tags.js";
 import { settings } from "./utils/settings.js";
 
 await seedPrompts();
+
 onTab("Prompts", async (input) => {
   await renderPrompts("prompts");
   setTab("Prompts");

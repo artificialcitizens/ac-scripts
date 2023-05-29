@@ -77,11 +77,16 @@ export const filterPromptsByTag = async (dbName) => {
  *
  * @returns {Promise<string>}
  */
-export const renderTags = async (dbName) => {
+export const renderTags = async (dbName, tags = []) => {
   const tagsDb = await db(dbName);
   await tagsDb.read();
   const allTags = [...tagsDb.data.tags];
-  const selectedTags = {};
+  const selectedTags = {
+    ...tags.reduce((acc, tag) => {
+      acc[tag] = true;
+      return acc;
+    }, {}),
+  };
   let selecting = true;
   while (selecting) {
     const availableTags = allTags.map((tag) => ({

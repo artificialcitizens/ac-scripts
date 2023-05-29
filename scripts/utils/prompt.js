@@ -46,6 +46,7 @@ export const updatePrompt = async (dbName, snippetName) => {
     (key) => prompts.data.snips[key].name === promptToDelete
   );
 
+  const promptTags = prompts.data.snips[idToUpdate].tags.map((tag) => tag);
   const updateSelection = await arg("What would you like to update?", [
     "Name",
     "Description",
@@ -63,7 +64,7 @@ export const updatePrompt = async (dbName, snippetName) => {
       });
       break;
     case "Description":
-      prompts.data.snips[idToUpdate].name = (
+      prompts.data.snips[idToUpdate].description = (
         await arg({
           placeholder: description,
           defaultValue: description,
@@ -76,12 +77,16 @@ export const updatePrompt = async (dbName, snippetName) => {
       });
       break;
     case "Tags":
-      prompts.data.snips[idToUpdate].tags = await renderTags();
+      prompts.data.snips[idToUpdate].tags = await renderTags(
+        dbName,
+        promptTags
+      );
       break;
     default:
       break;
   }
   prompts.data.snips[idToUpdate].updatedAt = new Date().toISOString();
+  toast(`${prompts.data.snips[idToUpdate].name} updated.`);
   await prompts.write();
 };
 /**
@@ -107,21 +112,21 @@ export const deletePrompt = async (dbName, snippetName) => {
   );
 
   if (!id) {
-    console.log("Prompt not found.");
+    warn("Prompt not found.");
     return;
   }
 
   const confirmation = await arg(
-    "Are you sure you want to delete this prompt?",
+    `Are you sure you want to delete ${promptToDelete}?`,
     ["Yes", "No"]
   );
 
   if (confirmation === "Yes") {
     delete prompts.data.snips[id];
     await prompts.write();
-    console.log("Prompt deleted.");
+    toast(`${promptToDelete} deleted.`);
   } else {
-    console.log("Deletion cancelled.");
+    log("Deletion cancelled.");
   }
 };
 

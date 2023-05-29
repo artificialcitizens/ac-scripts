@@ -16,7 +16,7 @@ Useful for summarizing text, generating a title, or any other task you can think
     - On editor submit the message is pasted into the highlighted text
 * Copy - Copy response to clipboard
 * Paste - Paste response into highlighted text
-* Save - Save response to file (not working)
+* Save - Save response to file
 ## Example
 - Highlight: 'Some really long passage in a blog post'
 - Run Script
@@ -84,172 +84,166 @@ ${prompt}
 `;
 };
 
-//################
-// Main Function
-//################
+const formattedPrompt = formatPrompt(userSystemInput);
+
+//#########
+// Helpers
+//########
+// exit script on cancel
+const cancelChat = () => {
+  exit();
+};
+
 /**
- *
- * @param {*} prompt
- * @param {*} humanChatMessage
+ * Paste text to highlighted text and exit script
+ * @param {*} text
  */
-async function promptAgainstHighlightedText(
-  prompt = formatPrompt(userSystemInput),
-  humanChatMessage = userPrompt
-) {
-  //#########
-  // Helpers
-  //########
-  // exit script on cancel
-  const cancelChat = () => {
-    exit();
-  };
+const pasteTextAndExit = async (text) => {
+  await setSelectedText(text);
+  exit();
+};
 
-  /**
-   * Paste text to highlighted text and exit script
-   * @param {*} text
-   */
-  const pasteTextAndExit = async (text) => {
-    await setSelectedText(text);
-    exit();
-  };
+/**
+ * Copy text to clipboard and exit script
+ * @param {*} text
+ */
+const copyToClipboardAndExit = async (text) => {
+  await clipboard.writeText(currentMessage);
+  exit();
+};
 
-  /**
-   * Copy text to clipboard and exit script
-   * @param {*} text
-   */
-  const copyToClipboardAndExit = async (text) => {
-    await clipboard.writeText(currentMessage);
-    exit();
-  };
-
-  let currentMessage = "";
-  let toast = null;
-  const llm = new ChatOpenAI({
-    // 0 = "precise", 1 = "creative"
-    temperature: 0.3,
-    // modelName: "gpt-4", // uncomment to use GPT-4 (requires beta access)
-    openAIApiKey: openAIApiKey,
-    // turn off to only get output when the AI is done
-    streaming: true,
-    callbacks: [
-      {
-        handleLLMStart: async () => {
-          log(`handleLLMStart`);
-          toast = toast(`Generating...`, { duration: 1000 });
-          currentMessage += "\n\n";
-          // render initial message
-        },
-        handleLLMNewToken: async (token) => {
-          // log(`handleLLMNewToken`);
-          // each new token is appended to the current message
-          // and then rendered to the screen
-          currentMessage += token;
-          // render current message
-          await div({
-            html: md(currentMessage),
-            // @TODO: Figure out how to get ESC to trigger a cancel
-            onAbandon: cancelChat,
-            onEscape: cancelChat,
-            onBackspace: cancelChat,
-            // if this is set to false you can click outside the window to cancel
-            // which works, but would be nice to also have ESC work
-            // ignoreBlur: false,
-            focus: true,
-            // hint: `Press ESC to cancel`,
-          });
-        },
-        handleLLMError: async (err) => {
-          dev({ err });
-        },
-        handleLLMEnd: async () => {
-          log(`handleLLMEnd`);
-          let html = md(currentMessage);
-          await div({
-            html,
-            ignoreBlur: true,
-            focus: true,
-            shortcuts: [
-              {
-                name: "Follow Up",
-                key: `${cmd}+r`,
-                bar: "left",
-                onPress: async () => {
-                  const newPrompt = await arg({
-                    placeholder: "Follow up question",
-                  });
-                  await llm.call([
-                    new SystemChatMessage(formatPrompt(prompt)),
-                    new HumanChatMessage(humanChatMessage),
-                    new AIChatMessage(currentMessage),
-                    new HumanChatMessage(newPrompt),
-                  ]);
-                  currentMessage = `
-                  ${humanChatMessage}
-                  ${currentMessage}
-                  ${newPrompt}
-                  `;
-                },
-              },
-              {
-                name: "Edit",
-                key: `${cmd}+x`,
-                bar: "left",
-                onPress: async () => {
-                  await editor({
-                    value: currentMessage,
-                    onEscape: async (state) =>
-                      await copyToClipboardAndExit(state),
-                    onSubmit: async (state) => await pasteTextAndExit(state),
-                  });
-                },
-              },
-              {
-                name: "Copy",
-                key: `${cmd}+c`,
-                bar: "right",
-                onPress: async () => {
-                  await clipboard.writeText(currentMessage);
-                  toast(`Copied`);
-                  setTimeout(() => {
-                    exitChat();
-                  }, 1000);
-                },
-              },
-              {
-                name: "Paste",
-                key: `${cmd}+p`,
-                bar: "right",
-                onPress: async () => {
-                  await setSelectedText(currentMessage);
-                  toast(`setSelectedText`);
-                  setTimeout(() => {
-                    exitChat();
-                  }, 1000);
-                },
-              },
-              {
-                name: "Save",
-                key: `${cmd}+s`,
-                bar: "right",
-                onPress: async () => {
-                  await inspect(
-                    currentMessage,
-                    `/conversations/${Date.now()}.md`
-                  );
-                  exitChat();
-                },
-              },
-            ],
-          });
-        },
+let priorMessage = "";
+let currentMessage = "";
+let toast = null;
+let chatStarted = false;
+const llm = new ChatOpenAI({
+  // 0 = "precise", 1 = "creative"
+  temperature: 0.3,
+  // modelName: "gpt-4", // uncomment to use GPT-4 (requires beta access)
+  openAIApiKey: openAIApiKey,
+  // turn off to only get output when the AI is done
+  streaming: true,
+  callbacks: [
+    {
+      handleLLMStart: async () => {
+        log(`handleLLMStart`);
       },
-    ],
-  });
+      handleLLMNewToken: async (token) => {
+        // each new token is appended to the current message
+        // and then rendered to the screen
+        currentMessage += token;
+        // render current message
+        await div({
+          html: md(priorMessage + "\n\n" + currentMessage),
+          onEscape: async () => {
+            cancelChat();
+          },
+          shortcuts: [
+            {
+              name: "Cancel Generation",
+              key: `${cmd}+c`,
+              bar: "left",
+              onPress: async () => {
+                cancelChat();
+              },
+            },
+          ],
+        });
+      },
+      handleLLMError: async (err) => {
+        dev({ err });
+        chatStarted = false;
+      },
+      handleLLMEnd: async () => {
+        log(`handleLLMEnd`);
+        chatStarted = false;
+        let html = md(priorMessage + "\n\n" + currentMessage);
+        await div({
+          html,
+          ignoreBlur: true,
+          focus: true,
+          shortcuts: [
+            {
+              name: "Follow Up",
+              key: `${cmd}+f`,
+              bar: "left",
+              onPress: async () => {
+                const newPrompt = await arg(
+                  {
+                    placeholder: "Follow up question",
+                    strict: false,
+                  },
+                  {
+                    html,
+                  }
+                );
+                priorMessage += currentMessage;
+                currentMessage = "";
+                await llm.call([
+                  new SystemChatMessage(formattedPrompt),
+                  new HumanChatMessage(userPrompt),
+                  new AIChatMessage(priorMessage),
+                  new HumanChatMessage(newPrompt),
+                ]);
+              },
+            },
+            {
+              name: "Edit",
+              key: `${cmd}+x`,
+              bar: "right",
+              onPress: async () => {
+                await editor({
+                  value: currentMessage,
+                  onEscape: async (state) =>
+                    await copyToClipboardAndExit(state),
+                  onSubmit: async (state) => await pasteTextAndExit(state),
+                });
+              },
+            },
+            {
+              name: "Copy",
+              key: `${cmd}+c`,
+              bar: "right",
+              onPress: async () => {
+                await clipboard.writeText(currentMessage);
+                toast(`Copied`);
+                setTimeout(() => {
+                  exitChat();
+                }, 1000);
+              },
+            },
+            {
+              name: "Paste",
+              key: `${cmd}+p`,
+              bar: "right",
+              onPress: async () => {
+                await setSelectedText(currentMessage);
+                toast(`setSelectedText`);
+                setTimeout(() => {
+                  exitChat();
+                }, 1000);
+              },
+            },
+            {
+              name: "Save",
+              key: `${cmd}+s`,
+              bar: "right",
+              onPress: async () => {
+                await inspect(
+                  currentMessage,
+                  `/conversations/${Date.now()}.md`
+                );
+                exitChat();
+              },
+            },
+          ],
+        });
+      },
+    },
+  ],
+});
 
-  await llm.call([
-    new SystemChatMessage(formatPrompt(prompt)),
-    new HumanChatMessage(humanChatMessage),
-  ]);
-}
-
-promptAgainstHighlightedText();
+await llm.call([
+  new SystemChatMessage(formattedPrompt),
+  new HumanChatMessage(userPrompt),
+]);
