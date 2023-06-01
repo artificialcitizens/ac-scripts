@@ -17,7 +17,7 @@ Useful for summarizing text, generating a title, or any other task you can think
     - On editor submit the message is pasted into the highlighted text
 * Copy - Copy response to clipboard
 * Paste - Paste response into highlighted text
-* Save - Save response to file in the .kenv/temp/conversations directory
+* Save - Save response to file in the .kenv/temp/prompt-anything/conversations directory
 
 ## Example
 - Highlight: 'Some really long passage in a blog post'
@@ -240,7 +240,10 @@ const llm = new ChatOpenAI({
               key: `${cmd}+s`,
               bar: "right",
               onPress: async () => {
-                await inspect(currentMessage, `conversations/${Date.now()}.md`);
+                await inspect(
+                  priorMessage + "\n" + currentMessage,
+                  `conversations/${Date.now()}.md`
+                );
                 exitChat();
               },
             },
