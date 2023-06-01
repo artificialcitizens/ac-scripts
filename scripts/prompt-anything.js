@@ -10,13 +10,15 @@ Useful for summarizing text, generating a title, or any other task you can think
 - Input your desired prompt
 - Wait for the AI to respond
 - Select one of the options
+* Reply - Add a follow up question
 * Retry - Rerun generation with option to update prompt
 * Edit - Edit response in editor
     - On editor exit the message is saved to the clipboard
     - On editor submit the message is pasted into the highlighted text
 * Copy - Copy response to clipboard
 * Paste - Paste response into highlighted text
-* Save - Save response to file
+* Save - Save response to file in the .kenv/temp/conversations directory
+
 ## Example
 - Highlight: 'Some really long passage in a blog post'
 - Run Script
@@ -160,11 +162,9 @@ const llm = new ChatOpenAI({
         let html = md(priorMessage + "\n\n" + currentMessage);
         await div({
           html,
-          ignoreBlur: true,
-          focus: true,
           shortcuts: [
             {
-              name: "Follow Up",
+              name: "Reply",
               key: `${cmd}+f`,
               bar: "left",
               onPress: async () => {
@@ -184,6 +184,18 @@ const llm = new ChatOpenAI({
                   new HumanChatMessage(userPrompt),
                   new AIChatMessage(priorMessage),
                   new HumanChatMessage(newPrompt),
+                ]);
+              },
+            },
+            {
+              name: "Retry",
+              key: `${cmd}+r`,
+              bar: "left",
+              onPress: async () => {
+                currentMessage = "";
+                await llm.call([
+                  new SystemChatMessage(formattedPrompt),
+                  new HumanChatMessage(userPrompt),
                 ]);
               },
             },
@@ -218,7 +230,6 @@ const llm = new ChatOpenAI({
               bar: "right",
               onPress: async () => {
                 await setSelectedText(currentMessage);
-                toast(`setSelectedText`);
                 setTimeout(() => {
                   exitChat();
                 }, 1000);
@@ -229,10 +240,7 @@ const llm = new ChatOpenAI({
               key: `${cmd}+s`,
               bar: "right",
               onPress: async () => {
-                await inspect(
-                  currentMessage,
-                  `/conversations/${Date.now()}.md`
-                );
+                await inspect(currentMessage, `conversations/${Date.now()}.md`);
                 exitChat();
               },
             },
